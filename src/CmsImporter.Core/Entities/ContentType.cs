@@ -1,4 +1,4 @@
-namespace CmsImporter.Domain.Entities;
+namespace CmsImporter.Core.Entities;
 
 public enum ContentType
 {

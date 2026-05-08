@@ -1,6 +1,6 @@
-using CmsImporter.Domain.DTOs;
+using CmsImporter.Core.DTOs;
 
-namespace CmsImporter.Domain.Abstractions;
+namespace CmsImporter.Core.Abstractions;
 
 public interface ISourceConnector
 {
@@ -11,10 +11,12 @@ public interface ISourceConnector
         CancellationToken cancellationToken = default);
 }
 
-public sealed record SourceConnectorOptions(IReadOnlyDictionary<string, string> Settings)
+public sealed record SourceConnectorOptions
 {
+    public required IReadOnlyDictionary<string, string> Settings { get; init; }
+
     public static SourceConnectorOptions Empty { get; } =
-        new(new Dictionary<string, string>());
+        new() { Settings = new Dictionary<string, string>() };
 
     public string Require(string key) =>
         Settings.TryGetValue(key, out var value)

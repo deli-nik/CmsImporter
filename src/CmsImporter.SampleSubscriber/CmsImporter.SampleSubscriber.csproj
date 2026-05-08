@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\CmsImporter.Domain\CmsImporter.Domain.csproj" />
+    <PackageReference Include="RabbitMQ.Client" Version="7.2.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="RabbitMQ.Client" Version="7.2.1" />
+    <ProjectReference Include="..\CmsImporter.Core\CmsImporter.Core.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

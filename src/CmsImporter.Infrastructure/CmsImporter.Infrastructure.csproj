@@ -2,7 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CmsImporter.Application\CmsImporter.Application.csproj" />
-    <ProjectReference Include="..\CmsImporter.Domain\CmsImporter.Domain.csproj" />
+    <ProjectReference Include="..\CmsImporter.Core\CmsImporter.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

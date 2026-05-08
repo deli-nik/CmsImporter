@@ -1,6 +1,6 @@
-using CmsImporter.Domain.Entities;
+using CmsImporter.Core.Entities;
 
-namespace CmsImporter.Domain.Abstractions;
+namespace CmsImporter.Core.Abstractions;
 
 public interface IContentRepository
 {

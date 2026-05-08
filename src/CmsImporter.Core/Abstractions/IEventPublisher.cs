@@ -1,4 +1,4 @@
-namespace CmsImporter.Domain.Abstractions;
+namespace CmsImporter.Core.Abstractions;
 
 public interface IEventPublisher
 {
