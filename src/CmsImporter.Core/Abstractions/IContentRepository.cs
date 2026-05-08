@@ -1,3 +1,4 @@
+using CmsImporter.Core.DTOs;
 using CmsImporter.Core.Entities;
 
 namespace CmsImporter.Core.Abstractions;
@@ -16,7 +17,7 @@ public interface IContentRepository
         IReadOnlyCollection<string> externalIds,
         CancellationToken cancellationToken = default);
 
-    Task UpsertManyAsync(
+    Task<UpsertResult> UpsertManyAsync(
         IReadOnlyCollection<ContentItem> items,
         CancellationToken cancellationToken = default);
 }
