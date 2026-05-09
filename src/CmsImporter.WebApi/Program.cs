@@ -1,41 +1,117 @@
-var builder = WebApplication.CreateBuilder(args);
+using System.Threading.Channels;
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+using CmsImporter.Application.DependencyInjection;
+using CmsImporter.Application.Pipeline;
+using CmsImporter.Application.Telemetry;
+using CmsImporter.Infrastructure.DependencyInjection;
+using CmsImporter.Infrastructure.Persistence;
+using CmsImporter.WebApi.BackgroundServices;
+using CmsImporter.WebApi.Endpoints;
 
-var app = builder.Build();
+using Microsoft.EntityFrameworkCore;
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+
+using Serilog;
+using Serilog.Events;
+
+// Bootstrap logger — captures any failures during host construction.
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File(
+        path: "logs/cms-importer-.log",
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 14)
+    .CreateBootstrapLogger();
+
+try
 {
-    app.MapOpenApi();
+    Log.Information("Starting CmsImporter.WebApi");
+
+    var builder = WebApplication.CreateBuilder(args);
+
+    // Replace the default logger with Serilog, reading config + DI services.
+    builder.Host.UseSerilog((context, services, config) => config
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext()
+        .WriteTo.Console()
+        .WriteTo.File(
+            path: "logs/cms-importer-.log",
+            rollingInterval: RollingInterval.Day,
+            retainedFileCountLimit: 14,
+            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}"));
+
+    // Application + Infrastructure layers.
+    builder.Services.AddCmsImporterApplication(builder.Configuration);
+    builder.Services.AddCmsImporterInfrastructure(builder.Configuration);
+
+    // Job channel — singleton bounded channel between the API (writer) and the worker (reader).
+    builder.Services.AddSingleton(_ => Channel.CreateBounded<ImportJob>(new BoundedChannelOptions(100)
+    {
+        FullMode = BoundedChannelFullMode.Wait,
+        SingleReader = true,
+        SingleWriter = false,
+    }));
+
+    builder.Services.AddHostedService<ImportWorker>();
+
+    // OpenAPI + Swagger UI.
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(opts =>
+    {
+        opts.SwaggerDoc("v1", new() { Title = "CmsImporter", Version = "v1" });
+    });
+
+    // OpenTelemetry tracing — covers ASP.NET Core, HttpClient, EF Core, plus our import pipeline source.
+    builder.Services.AddOpenTelemetry()
+        .ConfigureResource(r => r.AddService("CmsImporter.WebApi"))
+        .WithTracing(t => t
+            .AddSource(ImportActivitySource.Name)
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddEntityFrameworkCoreInstrumentation()
+            .AddConsoleExporter());
+
+    // Health checks.
+    builder.Services.AddHealthChecks()
+        .AddDbContextCheck<AppDbContext>("postgres");
+
+    var app = builder.Build();
+
+    // Apply EF migrations on startup.
+    await using (var scope = app.Services.CreateAsyncScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Log.Information("Applying EF Core migrations...");
+        await db.Database.MigrateAsync();
+        Log.Information("Migrations applied.");
+    }
+
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
+
+    app.UseSerilogRequestLogging();
+
+    app.MapHealthChecks("/health");
+    app.MapImportEndpoints();
+    app.MapContentEndpoints();
+
+    await app.RunAsync();
 }
-
-app.UseHttpsRedirection();
-
-var summaries = new[]
+catch (Exception ex) when (ex is not HostAbortedException)
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
+    Log.Fatal(ex, "CmsImporter.WebApi terminated unexpectedly");
+}
+finally
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
-
-app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    Log.Information("CmsImporter.WebApi shutting down");
+    await Log.CloseAndFlushAsync();
 }
