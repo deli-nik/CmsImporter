@@ -24,15 +24,24 @@ public static class ApplicationServiceCollectionExtensions
 
         services.TryAddSingleton(TimeProvider.System);
 
+        // Stateless / pure stages — singleton.
         services.AddSingleton<ExtractStage>();
         services.AddSingleton<TransformStage>();
         services.AddSingleton<ValidateStage>();
-        services.AddSingleton<LoadStage>();
         services.AddSingleton<NotifyStage>();
-        services.AddSingleton<ImportOrchestrator>();
 
+        // LoadStage transitively depends on IContentRepository (scoped DbContext).
+        services.AddScoped<LoadStage>();
+
+        // Orchestrator depends on LoadStage → must be scoped. The BackgroundService
+        // creates one scope per import job and resolves the orchestrator from it.
+        services.AddScoped<ImportOrchestrator>();
+
+        // Tracker survives across scopes so /imports/{id} can read in-flight state.
         services.AddSingleton<IImportProgressTracker, InMemoryImportProgressTracker>();
-        services.AddSingleton<ContentQueryService>();
+
+        // Read service depends on the scoped repository.
+        services.AddScoped<ContentQueryService>();
 
         return services;
     }
