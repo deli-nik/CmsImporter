@@ -1,0 +1,89 @@
+[
+  {
+    "externalId": "page-001",
+    "type": "Page",
+    "title": "Welcome to Acme",
+    "slug": "welcome-to-acme",
+    "author": "Jane Smith",
+    "publishedAt": "2024-01-15T10:30:00Z",
+    "bodyFormat": "markdown",
+    "bodyRaw": "# Welcome to Acme\n\nWe make great products that solve real problems.",
+    "bodyBlocks": [
+      { "type": "heading", "content": "Welcome to Acme", "attributes": { "level": "1" } },
+      { "type": "paragraph", "content": "We make great products that solve real problems." }
+    ],
+    "metadata": {
+      "category": "marketing",
+      "tags": "hero,landing",
+      "language": "en"
+    }
+  },
+  {
+    "externalId": "article-2024-q1-launch",
+    "type": "Article",
+    "title": "Announcing our Q1 product launch",
+    "slug": "q1-product-launch",
+    "author": "Marketing Team",
+    "publishedAt": "2024-03-22T14:00:00Z",
+    "bodyFormat": "markdown",
+    "bodyRaw": "## Q1 Launch\n\nToday we're shipping three new features...",
+    "bodyBlocks": [
+      { "type": "heading", "content": "Q1 Launch", "attributes": { "level": "2" } },
+      { "type": "paragraph", "content": "Today we're shipping three new features..." }
+    ],
+    "metadata": {
+      "category": "news",
+      "tags": "release,product",
+      "language": "en"
+    }
+  },
+  {
+    "externalId": "article-2024-q2-customer-story",
+    "type": "Article",
+    "title": "How Initech ships 4x faster with Acme",
+    "slug": "initech-customer-story",
+    "author": "Customer Success",
+    "publishedAt": "2024-05-08T09:00:00Z",
+    "bodyFormat": "markdown",
+    "bodyRaw": "Initech adopted Acme last quarter...",
+    "metadata": {
+      "category": "case-study",
+      "tags": "customer,enterprise",
+      "language": "en"
+    }
+  },
+  {
+    "externalId": "media-logo-primary",
+    "type": "Media",
+    "title": "Acme primary logo (SVG)",
+    "slug": "logo-primary",
+    "publishedAt": "2023-11-01T00:00:00Z",
+    "bodyFormat": "image/svg+xml",
+    "bodyRaw": "<svg width=\"120\" height=\"40\"><text x=\"0\" y=\"30\">ACME</text></svg>",
+    "metadata": {
+      "category": "brand",
+      "tags": "logo,svg",
+      "width": "120",
+      "height": "40"
+    }
+  },
+  {
+    "externalId": "page-pricing",
+    "type": "Page",
+    "title": "Pricing",
+    "slug": "pricing",
+    "author": "Marketing Team",
+    "publishedAt": "2024-02-14T11:00:00Z",
+    "bodyFormat": "markdown",
+    "bodyRaw": "# Pricing\n\n- Starter: $0\n- Pro: $29/mo\n- Enterprise: contact sales",
+    "bodyBlocks": [
+      { "type": "heading", "content": "Pricing", "attributes": { "level": "1" } },
+      { "type": "list", "content": "Starter: $0; Pro: $29/mo; Enterprise: contact sales" }
+    ],
+    "metadata": {
+      "category": "marketing",
+      "tags": "pricing,plans",
+      "language": "en"
+    }
+  }
+]
