@@ -14,25 +14,25 @@ Take-home solution for below task:
 
 ```mermaid
 graph TD
-    subgraph Core["CmsImporter.Core — pure domain, no dependencies"]
+    subgraph Core["CmsImporter.Core - Domain"]
         E["Entities · ValueObjects · DTOs"]
         I["IContentRepository · ISourceConnector<br/>IEventPublisher · IImportProgressTracker"]
     end
 
-    subgraph App["CmsImporter.Application — orchestration"]
+    subgraph App["CmsImporter.Application - Orchestration"]
         PIPE["Pipeline stages<br/>Extract → Transform → Validate → Load → Notify"]
         QS["ContentQueryService (IQueryable composition)"]
         REG["SourceConnectorRegistry (adapter lookup)"]
     end
 
-    subgraph Infra["CmsImporter.Infrastructure — I/O plugins"]
+    subgraph Infra["CmsImporter.Infrastructure - I/O plugins"]
         DB["EfContentRepository (EF Core + Postgres JSONB)"]
         MQ["RabbitMqEventPublisher (async v7 API)"]
         CON["FileSystemJsonSourceConnector<br/>HttpRestSourceConnector"]
         RES["Polly ResiliencePipelines"]
     end
 
-    subgraph Api["CmsImporter.WebApi — composition root"]
+    subgraph Api["CmsImporter.WebApi - Composition"]
         EP["Minimal API endpoints"]
         WK["ImportWorker (BackgroundService)"]
         CHAN["Channel&lt;ImportJob&gt; (bounded, Wait)"]
@@ -44,7 +44,7 @@ graph TD
     Infra --> Api
     App  --> Api
 
-    classDef layer fill:#f8fafc,stroke:#64748b
+    classDef layer fill:#f8fafc,stroke:#64748b,color:#0f172a
     class Core,App,Infra,Api layer
 ```
 
@@ -94,9 +94,9 @@ flowchart TB
     NOTIFY --> RMQ
     RMQ --> SUB
 
-    classDef channel fill:#fef3c7,stroke:#92400e
-    classDef parallel fill:#ddd6fe,stroke:#5b21b6
-    classDef sink fill:#bbf7d0,stroke:#15803d
+    classDef channel fill:#fef3c7,stroke:#92400e,color:#0f172a
+    classDef parallel fill:#ddd6fe,stroke:#5b21b6,color:#0f172a
+    classDef sink fill:#bbf7d0,stroke:#15803d,color:#0f172a
     class JOBS,ITEM_CHAN channel
     class TFV parallel
     class PG,RMQ sink
