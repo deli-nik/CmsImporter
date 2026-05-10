@@ -8,6 +8,8 @@ using CmsImporter.Infrastructure.Persistence;
 using CmsImporter.WebApi.BackgroundServices;
 using CmsImporter.WebApi.Endpoints;
 
+using Scalar.AspNetCore;
+
 using Microsoft.EntityFrameworkCore;
 
 using OpenTelemetry.Resources;
@@ -74,12 +76,8 @@ public class Program
 
             builder.Services.AddHostedService<ImportWorker>();
 
-            // OpenAPI + Swagger UI.
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen(opts =>
-            {
-                opts.SwaggerDoc("v1", new() { Title = "CmsImporter", Version = "v1" });
-            });
+            // OpenAPI — built-in .NET 9 support; document served at /openapi/v1.json.
+            builder.Services.AddOpenApi();
 
             // OpenTelemetry tracing — covers ASP.NET Core, HttpClient, EF Core, plus our import pipeline source.
             builder.Services.AddOpenTelemetry()
@@ -108,8 +106,8 @@ public class Program
 
             if (app.Environment.IsDevelopment())
             {
-                app.UseSwagger();
-                app.UseSwaggerUI();
+                app.MapOpenApi(); // served at /openapi/v1.json
+                app.MapScalarApiReference(); // UI at /scalar/v1
                 app.MapDemoSourceEndpoints();
             }
 
