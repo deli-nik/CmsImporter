@@ -48,7 +48,7 @@ graph TD
     class Core,App,Infra,Api layer
 ```
 
-Layer dependencies flow strictly inward. `Core` has zero external dependencies. `Infrastructure` implements `Core` interfaces as plugins. Adding future connectors does not touch any other layer.
+Layer dependencies flow strictly inward. `Core` has zero external dependencies. `Infrastructure` implements `Core` interfaces as plugins. Adding future connectors or publishers does not touch any other layer.
 
 ### Data flow / pipeline
 
@@ -102,7 +102,7 @@ flowchart TB
     class PG,RMQ sink
 ```
 
-**Two channels** sit on the data path: `Channel<ImportJob>` decouples the API from the background worker; `Channel<ContentItem>` gives the parallel transform fan-out backpressure against the single-reader load consumer. Both are bounded with `FullMode.Wait` — slow downstream genuinely throttles fast upstream instead of buffering unbounded in memory.
+**Two channels** sit on the data path: `Channel<ImportJob>` decouples the API from the background worker; `Channel<ContentItem>` gives the parallel transform fan-out backpressure against the single-reader load consumer. Both are bounded with `FullMode.Wait`, slow downstream throttles fast upstream instead of buffering unbounded in memory.
 
 ---
 
@@ -198,17 +198,17 @@ tests/
 └── CmsImporter.IntegrationTests/  # end-to-end tests (Testcontainers)
 ```
 
-**Layer dependencies** are strict: `Core` has no dependencies; `Application` depends on `Core`; `Infrastructure` depends on `Application` + `Core`; `WebApi` wires everything up. Source connectors and the RabbitMQ publisher are **plugins** behind `Core` interfaces. — adding a new source CMS doesn't touch any other layer.
+**Layer dependencies** are strict: `Core` has no dependencies; `Application` depends on `Core`; `Infrastructure` depends on `Application` + `Core`; `WebApi` wires everything up. Source connectors and the RabbitMQ publisher are **plugins** behind `Core` interfaces. Adding future connectors or publishers does not touch any other layer.
 
 ---
 
 ## Tech stack
 
-- **.NET 9** (C# 13) — `global.json` pins the SDK version
-- **PostgreSQL 16 (alpine)** + **RabbitMQ 3.13 management (alpine)** — via `docker-compose.yml`
-- **EF Core 9** + **Npgsql.EntityFrameworkCore.PostgreSQL 9** — JSONB-aware mapping, optimistic concurrency
-- **RabbitMQ.Client 7** — async v7 API (`CreateConnectionAsync`, `BasicPublishAsync`, `AsyncEventingBasicConsumer`)
-- **Polly v8** + **Microsoft.Extensions.Http.Resilience** — retry, circuit-breaker, exponential backoff with jitter
-- **Serilog** — console + daily rolling file sinks; structured enrichment with `JobId`, `SourceSystem`, stage timings
-- **OpenTelemetry** — ASP.NET Core, HttpClient, EF Core, and custom `ImportActivitySource`; console exporter in dev, OTLP-ready
-- **NUnit 4** + **NSubstitute 5** + **Testcontainers 4** for tests
+- **.NET 9** (C# 13)
+- **PostgreSQL 16 (alpine)** + **RabbitMQ 3.13 management (alpine)**
+- **EF Core 9** + **Npgsql.EntityFrameworkCore.PostgreSQL 9**
+- **RabbitMQ.Client 7**
+- **Polly v8** + **Microsoft.Extensions.Http.Resilience**: retry, circuit-breaker, exponential backoff with jitter
+- **Serilog**: console + rolling file sinks, structured enrichment with `JobId`+`SourceSystem`
+- **OpenTelemetry**: ASP.NET Core, HttpClient, EF Core, and custom `ImportActivitySource`, console exporter
+- **NUnit 4** + **NSubstitute 5** + **Testcontainers 4**: for tests
