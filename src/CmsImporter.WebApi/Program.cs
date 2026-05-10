@@ -18,7 +18,7 @@ using Serilog.Events;
 
 namespace CmsImporter.WebApi;
 
-public static class Program
+public class Program
 {
     public static async Task<int> Main(string[] args)
     {

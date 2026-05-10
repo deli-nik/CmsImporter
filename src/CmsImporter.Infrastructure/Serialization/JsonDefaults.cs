@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace CmsImporter.Infrastructure.Serialization;
 
@@ -8,5 +9,6 @@ internal static class JsonDefaults
     {
         PropertyNameCaseInsensitive = true,
         WriteIndented = false,
+        Converters = { new JsonStringEnumConverter() },
     };
 }
