@@ -7,8 +7,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CmsImporter.Application.Queries;
 
+/// <summary>
+/// Read-side service over <see cref="IContentRepository.Query"/>. Demonstrates
+/// <see cref="IQueryable{T}"/> composition: each predicate is appended to the expression tree
+/// only when the corresponding criterion is present, then materialised via <c>ToListAsync</c>.
+/// EF Core translates the whole chain to a single SQL statement; predicates that aren't applied
+/// don't appear in the WHERE clause.
+/// </summary>
 public sealed class ContentQueryService(IContentRepository repository)
 {
+    /// <summary>
+    /// Builds the filter chain from <paramref name="criteria"/> and returns the matching items,
+    /// newest first, with paging applied.
+    /// </summary>
     public async Task<IReadOnlyList<ContentItem>> SearchAsync(
         ContentSearchCriteria criteria,
         CancellationToken cancellationToken)
@@ -48,6 +59,7 @@ public sealed class ContentQueryService(IContentRepository repository)
             .ToListAsync(cancellationToken);
     }
 
+    /// <summary>Returns the count for the same filter chain (without paging).</summary>
     public Task<int> CountAsync(ContentSearchCriteria criteria, CancellationToken cancellationToken)
     {
         IQueryable<ContentItem> query = repository.Query();

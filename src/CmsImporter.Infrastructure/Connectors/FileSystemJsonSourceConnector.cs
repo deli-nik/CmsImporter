@@ -9,11 +9,27 @@ using Microsoft.Extensions.Logging;
 
 namespace CmsImporter.Infrastructure.Connectors;
 
+/// <summary>
+/// Source connector that reads JSON files from a directory. Uses
+/// <see cref="JsonSerializer.DeserializeAsyncEnumerable{TValue}(System.IO.Stream, JsonSerializerOptions, CancellationToken)"/>
+/// so a multi-gigabyte export is processed one item at a time without ever buffering the full
+/// file into memory.
+/// </summary>
+/// <remarks>
+/// <para>Connector options:</para>
+/// <list type="bullet">
+///   <item><c>path</c> (required) — directory containing the JSON files.</item>
+///   <item><c>sourceSystem</c> (required) — logical name injected onto every item.</item>
+///   <item><c>pattern</c> (optional, defaults to <c>*.json</c>) — file name glob.</item>
+/// </list>
+/// </remarks>
 public sealed class FileSystemJsonSourceConnector(
     ILogger<FileSystemJsonSourceConnector> logger) : ISourceConnector
 {
+    /// <inheritdoc />
     public string Name => "FileSystem";
 
+    /// <inheritdoc />
     public async IAsyncEnumerable<RawContent> ReadAsync(
         SourceConnectorOptions options,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -75,6 +91,7 @@ public sealed class FileSystemJsonSourceConnector(
             Metadata = item.Metadata,
         };
 
+    /// <summary>JSON-shaped DTO for one item inside a source file.</summary>
     private sealed record FileItem
     {
         public string ExternalId { get; init; } = string.Empty;
@@ -98,6 +115,7 @@ public sealed class FileSystemJsonSourceConnector(
         public IReadOnlyDictionary<string, string>? Metadata { get; init; }
     }
 
+    /// <summary>JSON-shaped DTO for one body block inside a source file.</summary>
     private sealed record FileBlock
     {
         public string Type { get; init; } = string.Empty;

@@ -18,8 +18,16 @@ using Serilog.Events;
 
 namespace CmsImporter.WebApi;
 
+/// <summary>
+/// Entry point and host configuration for the CmsImporter Web API.
+/// </summary>
 public class Program
 {
+    /// <summary>
+    /// Builds and runs the ASP.NET Core host. Applies EF Core migrations on startup, wires
+    /// up Serilog logging, OpenTelemetry tracing, Swagger UI, and all API endpoints.
+    /// Returns <c>0</c> on clean shutdown or <c>1</c> when the host terminates unexpectedly.
+    /// </summary>
     public static async Task<int> Main(string[] args)
     {
         // Bootstrap logger — captures any failures during host construction.

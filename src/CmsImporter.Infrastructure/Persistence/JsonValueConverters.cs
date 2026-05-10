@@ -8,6 +8,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace CmsImporter.Infrastructure.Persistence;
 
+/// <summary>
+/// EF Core <see cref="ValueConverter{TModel, TProvider}"/> that round-trips a
+/// <see cref="ContentBody"/> through JSON for storage in a <c>jsonb</c> column.
+/// </summary>
 internal sealed class ContentBodyJsonConverter : ValueConverter<ContentBody, string>
 {
     public ContentBodyJsonConverter()
@@ -18,6 +22,11 @@ internal sealed class ContentBodyJsonConverter : ValueConverter<ContentBody, str
     }
 }
 
+/// <summary>
+/// Change-tracking comparer for <see cref="ContentBody"/>. Records compare by value, so
+/// reference equality is wrong here — relies on the record's generated structural <c>Equals</c>.
+/// EF Core uses this to decide whether the JSONB column was "changed" since it was loaded.
+/// </summary>
 internal sealed class ContentBodyValueComparer : ValueComparer<ContentBody>
 {
     public ContentBodyValueComparer()
@@ -29,6 +38,11 @@ internal sealed class ContentBodyValueComparer : ValueComparer<ContentBody>
     }
 }
 
+/// <summary>
+/// EF Core <see cref="ValueConverter{TModel, TProvider}"/> for the <c>Metadata</c> dictionary.
+/// Serialises to JSON for storage; deserialises into a concrete <see cref="Dictionary{TKey, TValue}"/>
+/// (which implements <see cref="IReadOnlyDictionary{TKey, TValue}"/>).
+/// </summary>
 internal sealed class StringDictionaryJsonConverter
     : ValueConverter<IReadOnlyDictionary<string, string>, string>
 {
@@ -41,6 +55,11 @@ internal sealed class StringDictionaryJsonConverter
     }
 }
 
+/// <summary>
+/// Change-tracking comparer for <c>IReadOnlyDictionary&lt;string, string&gt;</c>. Compares by
+/// content (every key + value), hashes by accumulating per-entry hashes, and snapshots by
+/// cloning so EF Core can detect whether the dict was mutated since load.
+/// </summary>
 internal sealed class StringDictionaryValueComparer
     : ValueComparer<IReadOnlyDictionary<string, string>>
 {

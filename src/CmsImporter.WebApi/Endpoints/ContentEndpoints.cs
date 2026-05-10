@@ -6,8 +6,12 @@ using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace CmsImporter.WebApi.Endpoints;
 
+/// <summary>
+/// Minimal-API endpoints for querying imported content. All routes are grouped under <c>/content</c>.
+/// </summary>
 public static class ContentEndpoints
 {
+    /// <summary>Registers the <c>GET /content</c> search endpoint on <paramref name="app"/>.</summary>
     public static IEndpointRouteBuilder MapContentEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/content").WithTags("Content");

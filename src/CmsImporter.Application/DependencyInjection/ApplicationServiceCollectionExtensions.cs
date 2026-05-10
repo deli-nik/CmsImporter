@@ -9,8 +9,17 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace CmsImporter.Application.DependencyInjection;
 
+/// <summary>
+/// DI wiring for the Application layer. Registers pipeline stages, the orchestrator, the
+/// in-memory progress tracker, and the read-side query service with appropriate lifetimes.
+/// </summary>
 public static class ApplicationServiceCollectionExtensions
 {
+    /// <summary>
+    /// Adds Application-layer services to the container. Bind options from
+    /// <see cref="ImportOrchestratorOptions.SectionName"/> (default <c>Import</c>) of
+    /// <paramref name="configuration"/>.
+    /// </summary>
     public static IServiceCollection AddCmsImporterApplication(
         this IServiceCollection services,
         IConfiguration configuration)

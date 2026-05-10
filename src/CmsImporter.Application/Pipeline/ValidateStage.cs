@@ -2,8 +2,17 @@ using CmsImporter.Core.Entities;
 
 namespace CmsImporter.Application.Pipeline;
 
+/// <summary>
+/// Pure per-item validation. Returns a <see cref="ValidationResult"/> describing every rule
+/// the item failed (rather than failing fast on the first one) so a single-pass validator can
+/// surface all issues to the caller in one go.
+/// </summary>
 public sealed class ValidateStage
 {
+    /// <summary>
+    /// Checks the candidate against the importer's required-field and length rules.
+    /// Returns <see cref="ValidationResult.Valid"/> when nothing is wrong.
+    /// </summary>
     public ValidationResult Execute(ContentItem item)
     {
         ArgumentNullException.ThrowIfNull(item);

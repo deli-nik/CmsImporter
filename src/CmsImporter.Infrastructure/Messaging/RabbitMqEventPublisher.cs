@@ -15,6 +15,17 @@ using RabbitMQ.Client;
 
 namespace CmsImporter.Infrastructure.Messaging;
 
+/// <summary>
+/// <see cref="IEventPublisher"/> backed by RabbitMQ via the v7 async client API. Singleton
+/// lifetime — owns one long-lived <see cref="IConnection"/> + <see cref="IChannel"/>. Connect is
+/// lazy on first publish; Polly retries handle transient broker failures.
+/// </summary>
+/// <remarks>
+/// <see cref="IChannel"/> is not thread-safe in v7; concurrent <c>BasicPublishAsync</c> calls
+/// would corrupt the wire protocol. The <see cref="_publishLock"/> serialises publishes from
+/// multiple callers (e.g., parallel imports). For higher throughput a per-caller channel
+/// pool would be the next step.
+/// </remarks>
 public sealed class RabbitMqEventPublisher : IEventPublisher, IAsyncDisposable
 {
     private readonly RabbitMqOptions _options;
@@ -33,6 +44,9 @@ public sealed class RabbitMqEventPublisher : IEventPublisher, IAsyncDisposable
 
     private bool _disposed;
 
+    /// <summary>
+    /// Constructs the publisher; the connection is opened lazily on first publish.
+    /// </summary>
     public RabbitMqEventPublisher(
         IOptions<RabbitMqOptions> options,
         ResiliencePipelineProvider<string> pipelineProvider,
@@ -43,10 +57,17 @@ public sealed class RabbitMqEventPublisher : IEventPublisher, IAsyncDisposable
         _logger = logger;
     }
 
+    /// <inheritdoc />
     public Task PublishAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default)
         where TEvent : class =>
         PublishManyAsync([@event], cancellationToken);
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// Publishes are wrapped in the <see cref="ResiliencePipelineKeys.RabbitMqPublish"/> Polly
+    /// pipeline (retry + circuit-breaker). Messages are <c>persistent: true</c> so they
+    /// survive a broker restart — but only for queues that are themselves declared durable.
+    /// </remarks>
     public async Task PublishManyAsync<TEvent>(
         IReadOnlyCollection<TEvent> events,
         CancellationToken cancellationToken = default)
@@ -102,6 +123,7 @@ public sealed class RabbitMqEventPublisher : IEventPublisher, IAsyncDisposable
         }
     }
 
+    /// <summary>Opens the connection + channel + declares the exchange on first call (idempotent).</summary>
     private async Task EnsureConnectedAsync(CancellationToken cancellationToken)
     {
         if (_channel is { IsOpen: true })
@@ -147,6 +169,10 @@ public sealed class RabbitMqEventPublisher : IEventPublisher, IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// Builds <c>{RoutingKeyPrefix}.{source}.{type}</c> for <see cref="ContentImportedEvent"/>;
+    /// falls back to the event type name for any other type.
+    /// </summary>
     private string BuildRoutingKey<TEvent>(TEvent @event) where TEvent : class =>
         @event switch
         {
@@ -155,6 +181,7 @@ public sealed class RabbitMqEventPublisher : IEventPublisher, IAsyncDisposable
             _ => $"{_options.RoutingKeyPrefix}.{typeof(TEvent).Name.ToLowerInvariant()}",
         };
 
+    /// <summary>Closes the channel and connection; idempotent.</summary>
     public async ValueTask DisposeAsync()
     {
         if (_disposed)

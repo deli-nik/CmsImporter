@@ -9,8 +9,24 @@ using RabbitMQ.Client.Exceptions;
 
 namespace CmsImporter.Infrastructure.Resiliency;
 
+/// <summary>
+/// Polly v8 resilience pipelines used by the Infrastructure layer. Registered as named
+/// pipelines so consumers can resolve them by key from
+/// <see cref="Polly.Registry.ResiliencePipelineProvider{TKey}"/>.
+/// </summary>
 public static class ResiliencePipelines
 {
+    /// <summary>
+    /// Registers the RabbitMQ-publish (<see cref="ResiliencePipelineKeys.RabbitMqPublish"/>) and
+    /// database-upsert (<see cref="ResiliencePipelineKeys.DatabaseUpsert"/>) pipelines on the
+    /// service collection.
+    /// </summary>
+    /// <remarks>
+    /// <para>RabbitMQ publish: 5 retries with jittered exponential backoff (base 500ms), trip on
+    /// 50% failure ratio over a 30s sampling window, 15s break.</para>
+    /// <para>Database upsert: 3 retries with jittered exponential backoff (base 200ms) on
+    /// transient <see cref="DbUpdateException"/>.</para>
+    /// </remarks>
     public static IServiceCollection AddCmsImporterResiliencePipelines(
         this IServiceCollection services)
     {

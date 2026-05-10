@@ -6,8 +6,18 @@ using CmsImporter.Core.ValueObjects;
 
 namespace CmsImporter.Application.Pipeline;
 
+/// <summary>
+/// Pure mapping from <see cref="RawContent"/> (source shape) to <see cref="ContentItem"/>
+/// (domain shape). Stateless and deterministic given a <see cref="TimeProvider"/> — easy to
+/// unit-test, safe to call from N parallel workers.
+/// </summary>
 public sealed class TransformStage(TimeProvider timeProvider)
 {
+    /// <summary>
+    /// Builds the domain <see cref="ContentItem"/> for one source record. Synthesises the slug
+    /// from the title when the source omits it; defensively copies <c>Metadata</c> so the
+    /// resulting item doesn't share references with the connector's output.
+    /// </summary>
     public ContentItem Execute(RawContent raw)
     {
         ArgumentNullException.ThrowIfNull(raw);

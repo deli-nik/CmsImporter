@@ -4,6 +4,11 @@ using System.Text.Json.Serialization;
 
 namespace CmsImporter.DemoConsole;
 
+/// <summary>
+/// Interactive console that demonstrates the CmsImporter API — enqueue FileSystem and HttpRest
+/// imports, poll job status in real time, and query imported content. Communicates with the
+/// WebApi over HTTP using <see cref="System.Net.Http.HttpClient"/>.
+/// </summary>
 public class Program
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
@@ -18,6 +23,11 @@ public class Program
 
     private static Guid? _lastJobId;
 
+    /// <summary>
+    /// Entry point. Accepts an optional API base URL as <c>args[0]</c> (defaults to
+    /// <c>http://localhost:5050</c>) and an optional samples directory path as <c>args[1]</c>.
+    /// Returns <c>0</c> on a normal exit or <c>1</c> when the API is unreachable at startup.
+    /// </summary>
     public static async Task<int> Main(string[] args)
     {
         var baseUrl = args.Length > 0 ? args[0] : "http://localhost:5050";

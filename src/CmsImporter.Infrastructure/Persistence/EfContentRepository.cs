@@ -7,13 +7,21 @@ using Microsoft.Extensions.Logging;
 
 namespace CmsImporter.Infrastructure.Persistence;
 
+/// <summary>
+/// EF Core implementation of <see cref="IContentRepository"/>. Scoped lifetime — instance is
+/// pinned to the same <see cref="AppDbContext"/> that the import-job DI scope created.
+/// </summary>
 public sealed class EfContentRepository(
     AppDbContext db,
     TimeProvider timeProvider,
     ILogger<EfContentRepository> logger) : IContentRepository
 {
+    /// <inheritdoc />
+    /// <remarks>Returns a no-tracking query — the read path materialises into DTOs, so EF
+    /// Core's identity map and change tracker would only add overhead.</remarks>
     public IQueryable<ContentItem> Query() => db.ContentItems.AsNoTracking();
 
+    /// <inheritdoc />
     public Task<ContentItem?> FindByExternalIdAsync(
         string sourceSystem,
         string externalId,
@@ -24,6 +32,7 @@ public sealed class EfContentRepository(
                 c => c.SourceSystem == sourceSystem && c.ExternalId == externalId,
                 cancellationToken);
 
+    /// <inheritdoc />
     public async Task<IReadOnlyDictionary<string, ContentItem>> FindByExternalIdsAsync(
         string sourceSystem,
         IReadOnlyCollection<string> externalIds,
@@ -44,6 +53,18 @@ public sealed class EfContentRepository(
         return items.ToDictionary(c => c.ExternalId);
     }
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// Memory-conscious bulk write:
+    /// <list type="bullet">
+    ///   <item>One <see cref="DbContext.SaveChangesAsync(CancellationToken)"/> per call (one transaction).</item>
+    ///   <item><c>AutoDetectChangesEnabled = false</c> for the duration so we don't spend time
+    ///     scanning the change tracker on every property assignment.</item>
+    ///   <item>One explicit <see cref="ChangeTracker.DetectChanges"/> sweep before save.</item>
+    ///   <item><see cref="ChangeTracker.Clear"/> in <c>finally</c> so the captured graph is
+    ///     GC-eligible — important because the orchestrator calls this method once per batch.</item>
+    /// </list>
+    /// </remarks>
     public async Task<UpsertResult> UpsertManyAsync(
         IReadOnlyCollection<ContentItem> items,
         CancellationToken cancellationToken = default)

@@ -6,6 +6,11 @@ using RabbitMQ.Client.Events;
 
 namespace CmsImporter.SampleSubscriber;
 
+/// <summary>
+/// Connects to the RabbitMQ topic exchange and prints incoming <c>ContentImportedEvent</c>
+/// messages to the console. Useful for verifying the end-to-end event-driven notification
+/// pipeline without writing a full subscriber service.
+/// </summary>
 public static class Program
 {
     private const string Exchange = "cms.content";
@@ -20,6 +25,12 @@ public static class Program
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
     };
 
+    /// <summary>
+    /// Entry point. Reads RabbitMQ connection details from the <c>RABBITMQ_HOST</c>,
+    /// <c>RABBITMQ_USER</c>, and <c>RABBITMQ_PASS</c> environment variables (defaults:
+    /// <c>localhost</c>, <c>cms</c>, <c>cms</c>). Runs until Ctrl+C.
+    /// Returns <c>0</c> on clean shutdown.
+    /// </summary>
     public static async Task<int> Main(string[] args)
     {
         var hostName = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? DefaultHost;

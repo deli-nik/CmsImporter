@@ -10,6 +10,13 @@ using Microsoft.Extensions.Options;
 
 namespace CmsImporter.Application.Pipeline;
 
+/// <summary>
+/// Composes the import pipeline for one job. Producer/consumer topology with a bounded
+/// <see cref="Channel{T}"/> sitting between an N-way <c>Parallel.ForEachAsync</c> over the
+/// extract stream and a single batched consumer that flushes to <see cref="LoadStage"/> +
+/// <see cref="NotifyStage"/>. Failures on either side propagate via a linked
+/// <see cref="CancellationTokenSource"/> so neither half outlives a broken half.
+/// </summary>
 public sealed class ImportOrchestrator(
     ExtractStage extractStage,
     TransformStage transformStage,
@@ -22,6 +29,15 @@ public sealed class ImportOrchestrator(
 {
     private readonly ImportOrchestratorOptions _options = options.Value;
 
+    /// <summary>
+    /// Runs one import end to end. Always returns an <see cref="ImportResult"/> reflecting the
+    /// terminal state (Completed, Failed, or Cancelled); never throws back to the caller.
+    /// </summary>
+    /// <param name="job">The job to run.</param>
+    /// <param name="progress">Progress instance to update during the run; the same instance is
+    /// observed by <c>GET /imports/{id}</c> readers via <see cref="Abstractions.IImportProgressTracker"/>.</param>
+    /// <param name="cancellationToken">Caller's cancellation token. When triggered, both the
+    /// producer and consumer stop promptly via the linked CTS.</param>
     public async Task<ImportResult> RunAsync(
         ImportJob job,
         ImportProgress progress,
@@ -88,6 +104,12 @@ public sealed class ImportOrchestrator(
         return BuildResult(progress, stopwatch.Elapsed);
     }
 
+    /// <summary>
+    /// Producer: drives <c>Parallel.ForEachAsync</c> over the extract stream, runs transform +
+    /// validate per item, writes survivors into the channel. Always completes the writer in
+    /// <c>finally</c> — with the exception when the loop threw, with <see langword="null"/>
+    /// otherwise — so the consumer's <c>ReadAllAsync</c> exits cleanly either way.
+    /// </summary>
     private async Task ProduceAsync(
         ImportJob job,
         ImportProgress progress,
@@ -149,12 +171,17 @@ public sealed class ImportOrchestrator(
         }
     }
 
+    /// <summary>
+    /// Consumer: drains the channel, dedups within a batch (last-wins by
+    /// <c>SourceSystem::ExternalId</c>), and flushes once <see cref="ImportOrchestratorOptions.LoadBatchSize"/>
+    /// is reached or the channel completes.
+    /// </summary>
     private async Task ConsumeAsync(
         ImportProgress progress,
         ChannelReader<ContentItem> reader,
         CancellationToken cancellationToken)
     {
-        // For deduplication
+        // Dedup-within-batch: if a source export contains the same key twice, last write wins.
         var batch = new ConcurrentDictionary<string, ContentItem>(
             concurrencyLevel: 1, capacity: _options.LoadBatchSize);
 

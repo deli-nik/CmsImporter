@@ -8,10 +8,16 @@ using Microsoft.Extensions.Logging;
 
 namespace CmsImporter.Application.Pipeline;
 
+/// <summary>
+/// Emits one <see cref="ContentImportedEvent"/> per upserted item (with <c>IsNew=true</c> for
+/// inserts, <c>false</c> for updates) via <see cref="IEventPublisher"/>. Wraps the publish in
+/// an <c>Import.Notify</c> tracing span.
+/// </summary>
 public sealed class NotifyStage(
     IEventPublisher publisher,
     ILogger<NotifyStage> logger)
 {
+    /// <summary>Builds the events from the upsert result and publishes them as a single batch.</summary>
     public async Task ExecuteAsync(
         UpsertResult upsertResult,
         ImportProgress progress,

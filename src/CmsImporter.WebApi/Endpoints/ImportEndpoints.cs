@@ -9,8 +9,14 @@ using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace CmsImporter.WebApi.Endpoints;
 
+/// <summary>
+/// Minimal-API endpoints for enqueuing and monitoring import jobs. All routes are grouped
+/// under <c>/imports</c>.
+/// </summary>
 public static class ImportEndpoints
 {
+    /// <summary>Registers all import-related endpoints (<c>POST /imports</c>, <c>GET /imports/{id}</c>,
+    /// <c>GET /imports</c>, <c>GET /imports/connectors</c>) on <paramref name="app"/>.</summary>
     public static IEndpointRouteBuilder MapImportEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/imports").WithTags("Imports");
@@ -101,9 +107,12 @@ public static class ImportEndpoints
         TypedResults.Ok(registry.AvailableConnectors);
 }
 
+/// <summary>Response body returned by <c>POST /imports</c> when a job is successfully enqueued.</summary>
 public sealed record EnqueueResponse
 {
+    /// <summary>The unique identifier assigned to the new import job.</summary>
     public required Guid JobId { get; init; }
 
+    /// <summary>UTC instant the job was accepted by the API.</summary>
     public required DateTimeOffset EnqueuedAt { get; init; }
 }

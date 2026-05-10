@@ -12,8 +12,17 @@ using Microsoft.Extensions.Http.Resilience;
 
 namespace CmsImporter.Infrastructure.DependencyInjection;
 
+/// <summary>
+/// DI wiring for the Infrastructure layer. Wires up EF Core + Postgres, the RabbitMQ event
+/// publisher, both source connectors with the registry, and Polly resilience pipelines.
+/// </summary>
 public static class InfrastructureServiceCollectionExtensions
 {
+    /// <summary>
+    /// Adds Infrastructure-layer services to the container. Requires connection strings/options
+    /// in <paramref name="configuration"/> — specifically <c>ConnectionStrings:Postgres</c> and
+    /// the <c>RabbitMq</c> section.
+    /// </summary>
     public static IServiceCollection AddCmsImporterInfrastructure(
         this IServiceCollection services,
         IConfiguration configuration)

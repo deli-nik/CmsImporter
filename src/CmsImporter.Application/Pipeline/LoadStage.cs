@@ -7,10 +7,20 @@ using Microsoft.Extensions.Logging;
 
 namespace CmsImporter.Application.Pipeline;
 
+/// <summary>
+/// Persists a batch of <see cref="ContentItem"/> via <see cref="IContentRepository.UpsertManyAsync"/>,
+/// updates progress counters, and emits an <c>Import.Load</c> tracing span. The stage is scoped
+/// (per-import-job DI scope) because it transitively depends on the scoped <c>DbContext</c>.
+/// </summary>
 public sealed class LoadStage(
     IContentRepository repository,
     ILogger<LoadStage> logger)
 {
+    /// <summary>
+    /// Calls <see cref="IContentRepository.UpsertManyAsync"/> for the batch and reports the
+    /// new/updated split back to <see cref="ImportProgress"/>. Returns the
+    /// <see cref="UpsertResult"/> for downstream notification.
+    /// </summary>
     public async Task<UpsertResult> ExecuteAsync(
         IReadOnlyCollection<ContentItem> batch,
         ImportProgress progress,
