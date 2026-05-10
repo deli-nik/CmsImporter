@@ -154,6 +154,7 @@ public sealed class ImportOrchestrator(
         ChannelReader<ContentItem> reader,
         CancellationToken cancellationToken)
     {
+        // For deduplication
         var batch = new ConcurrentDictionary<string, ContentItem>(
             concurrencyLevel: 1, capacity: _options.LoadBatchSize);
 

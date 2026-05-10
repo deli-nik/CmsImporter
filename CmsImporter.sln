@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CmsImporter.IntegrationTest
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CmsImporter.Core", "src\CmsImporter.Core\CmsImporter.Core.csproj", "{735BCB7B-2281-46FB-8435-B3CE1DBFEC72}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CmsImporter.DemoConsole", "src\CmsImporter.DemoConsole\CmsImporter.DemoConsole.csproj", "{CFADBC55-B3F0-4BBE-B137-0C4A448D0341}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -127,6 +129,18 @@ Global
 		{735BCB7B-2281-46FB-8435-B3CE1DBFEC72}.Release|x64.Build.0 = Release|Any CPU
 		{735BCB7B-2281-46FB-8435-B3CE1DBFEC72}.Release|x86.ActiveCfg = Release|Any CPU
 		{735BCB7B-2281-46FB-8435-B3CE1DBFEC72}.Release|x86.Build.0 = Release|Any CPU
+		{CFADBC55-B3F0-4BBE-B137-0C4A448D0341}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFADBC55-B3F0-4BBE-B137-0C4A448D0341}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFADBC55-B3F0-4BBE-B137-0C4A448D0341}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CFADBC55-B3F0-4BBE-B137-0C4A448D0341}.Debug|x64.Build.0 = Debug|Any CPU
+		{CFADBC55-B3F0-4BBE-B137-0C4A448D0341}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CFADBC55-B3F0-4BBE-B137-0C4A448D0341}.Debug|x86.Build.0 = Debug|Any CPU
+		{CFADBC55-B3F0-4BBE-B137-0C4A448D0341}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFADBC55-B3F0-4BBE-B137-0C4A448D0341}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFADBC55-B3F0-4BBE-B137-0C4A448D0341}.Release|x64.ActiveCfg = Release|Any CPU
+		{CFADBC55-B3F0-4BBE-B137-0C4A448D0341}.Release|x64.Build.0 = Release|Any CPU
+		{CFADBC55-B3F0-4BBE-B137-0C4A448D0341}.Release|x86.ActiveCfg = Release|Any CPU
+		{CFADBC55-B3F0-4BBE-B137-0C4A448D0341}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -140,5 +154,6 @@ Global
 		{CE807D29-C70F-4A11-8F17-2CCC10A02052} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{8193060F-48B8-401D-ACB0-C62A1F9C7713} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{735BCB7B-2281-46FB-8435-B3CE1DBFEC72} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{CFADBC55-B3F0-4BBE-B137-0C4A448D0341} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal
