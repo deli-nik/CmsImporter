@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build, unit tests, integration tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build (Release, warnings as errors)
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Check for pending EF model changes
+        run: |
+          dotnet tool install --global dotnet-ef --version 9.0.11
+          dotnet ef migrations has-pending-model-changes \
+            --project src/CmsImporter.Infrastructure \
+            --startup-project src/CmsImporter.WebApi
+
+      - name: Unit tests
+        run: >
+          dotnet test --no-build --configuration Release
+          --filter "TestCategory!=Integration&Category!=Integration"
+          --logger "trx;LogFileName=unit-tests.trx"
+          --results-directory TestResults
+
+      - name: Integration tests (Testcontainers — Postgres + RabbitMQ)
+        run: >
+          dotnet test --no-build --configuration Release
+          tests/CmsImporter.IntegrationTests/CmsImporter.IntegrationTests.csproj
+          --logger "trx;LogFileName=integration-tests.trx"
+          --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/*.trx
+          if-no-files-found: ignore
